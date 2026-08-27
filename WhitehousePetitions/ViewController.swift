@@ -9,11 +9,15 @@ import UIKit
 
 class ViewController: UITableViewController {
     var petitions = [Petition]()
+    var mainPetitions = [Petition]()
+    var filterPetitions = [Petition]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Credits", style: .plain, target: self, action: #selector(showCredit))
+        
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Filter", style: .plain, target: self, action: #selector(filterData))
         
         let urlString: String
         
@@ -45,6 +49,30 @@ class ViewController: UITableViewController {
         present(ac, animated: true)
     }
     
+    @objc func filterData() {
+        let ac = UIAlertController(title: "Filter", message: nil, preferredStyle: .alert)
+        ac.addTextField()
+        
+        let filterAction = UIAlertAction(title: "Search", style: .default) {
+            [weak self, weak ac] _ in
+            guard let word = ac?.textFields?[0].text else { return }
+            self?.filter(word)
+        }
+        
+        ac.addAction(filterAction)
+        present(ac, animated: true)
+    }
+    
+    func filter(_ word: String) {
+        petitions = mainPetitions
+        let lowerWord = word.lowercased()
+        
+        let filteredPetitions = petitions.filter {$0.title.localizedCaseInsensitiveContains(lowerWord)}
+        
+        petitions = filteredPetitions
+        tableView.reloadData()
+    }
+    
     func parse(json: Data) {
         let decoder = JSONDecoder()
         
@@ -52,6 +80,8 @@ class ViewController: UITableViewController {
             petitions = jsonPetition.results
             tableView.reloadData()
         }
+        
+        mainPetitions = petitions
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
